@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #070b14;
+  --color-surface: #0d1322;
+  --color-surface-raised: #131b2e;
+  --color-border: #1e293f;
+  --color-border-strong: #2b3a57;
+  --color-foreground: #e6ecf7;
+  --color-muted: #93a1bb;
+  --color-faint: #5d6b85;
+  --color-accent: #60a5fa;
+  --color-accent-soft: #60a5fa18;
+  --color-accent-strong: #93c5fd;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: #06152e;
+}
+
+/* Subtle dot-grid backdrop used by the hero */
+.bg-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(148, 163, 184, 0.14) 1px,
+    transparent 0
+  );
+  background-size: 28px 28px;
+}
+
+.text-gradient {
+  background: linear-gradient(120deg, #93c5fd 0%, #60a5fa 45%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-faint);
+}
+
+/* Reveal animations. Content is visible by default and only hidden once the
+   `js` class confirms scripting is live, so a failed bundle never blanks the page. */
+html.js .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+html.js .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.55s cubic-bezier(0.21, 0.65, 0.36, 1) var(--reveal-delay, 0s),
+    transform 0.55s cubic-bezier(0.21, 0.65, 0.36, 1) var(--reveal-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  html.js .reveal.is-visible {
+    transition: none;
+  }
+}
