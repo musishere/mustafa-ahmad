@@ -51,7 +51,7 @@ export default function Navbar() {
           href={`mailto:${site.email}`}
           className="hidden rounded-full border border-accent/40 bg-accent-soft px-4 py-1.5 text-sm font-medium text-accent-strong transition-colors hover:border-accent hover:bg-accent/20 md:inline-block"
         >
-          Hire Me
+          Work With Me
         </a>
 
         {/* Mobile menu button */}
@@ -85,7 +85,7 @@ export default function Navbar() {
                 href={`mailto:${site.email}`}
                 className="mt-2 block rounded-lg bg-accent-soft px-3 py-2 text-center text-sm font-medium text-accent-strong"
               >
-                Hire Me
+                Work With Me
               </a>
             </li>
           </ul>
