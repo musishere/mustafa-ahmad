@@ -1,0 +1,58 @@
+---
+title: Order Support Agent
+summary: "A LangGraph support agent that can look up, cancel and re-address orders, and is stopped in code from changing an order that has already shipped. It's the agent in the demo on the home page."
+year: 2026
+status: finished
+stack: [Python, LangGraph, FastAPI, Streamlit, SQLite, Mistral (ministral-8b)]
+order: 4
+hook: "The fix existed and did nothing."
+code: https://github.com/musishere/OrderSupportAgent
+---
+
+## Problem
+
+A support agent that can cancel orders and change shipping addresses is useful. It's also exactly what a fraudster wants to talk to: changing the address on an order that has already shipped is a known way to redirect a package. I wanted the agent to handle the safe requests on its own and stop on the risky ones, however the customer phrases them.
+
+## What I built
+
+A two-node LangGraph loop, `call_model` and `call_tool`, over five tools and a SQLite orders database. Two of the tools are gated. If the order has shipped, the gate returns `requires_confirmation` and the tool never runs:
+
+```python
+PERMISSION_GATED_TOOLS = {"cancel_order", "update_shipping_address"}
+
+def need_permission(tool_name: str, args: dict) -> bool:
+    """True if this tool call must be confirmed by a human before it runs."""
+    if tool_name not in PERMISSION_GATED_TOOLS:
+        return False
+    order = get_order(args.get("order_id", ""))
+    return bool(order) and order["status"] == "shipped"
+```
+
+The model can't approve its own call. `confirmed` and `approved_by` aren't in the tool schema, so there's no argument it could set. A loop guard stops the run after three identical tool calls, a step cap ends runs that go on too long, and every model and tool call is logged as a JSON event with its latency. It's served over FastAPI, with a Streamlit front end.
+
+{/* TODO: architecture diagram */}
+
+## Hardest part
+
+I'd added loop detection to `run_agent()` in `agent.py`. The server never called it. The live path was `run_graph()` in `graph.py`, which had no loop guard, so the fix existed and did nothing. I ported it into the graph.
+
+Per-turn metrics were cumulative. On the second turn of a conversation the server also reported the first turn's tool calls, because it counted every message in the history. It now counts only the messages that turn added.
+
+## Tradeoff
+
+To test the loop guard I wrote a `StuckClient`, a fake model that returns the same tool call forever. The guard gets tested without spending API calls. Sessions are kept in memory, which is fine for a demo and gone on restart.
+
+## Numbers
+
+{/* TODO: add the eval pass rate from `make evals` once it's run */}
+
+| Metric | Value | How I measured it |
+| --- | --- | --- |
+| Eval cases | 6 | `evals.py`, including injection and off-topic requests |
+| Tools that need a person's approval | 2 of 5 | `cancel_order`, `update_shipping_address` |
+| Loop guard | stops after 3 identical calls | tested with `StuckClient` |
+| Address change to "999 Hijacked Ave" on a shipped order | address unchanged | self-check in `graph.py` |
+
+## What I'd change
+
+There's no approval step. A gated call stops with `requires_confirmation`, and nothing picks it up. The check also lives in the graph instead of in `update_shipping_address` itself, so anything else that calls that function skips it. I'd move the check into the tool, add the approval node, and delete `agent.py`, which is still in the repo and still unused.

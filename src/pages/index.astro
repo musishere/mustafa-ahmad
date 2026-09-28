@@ -1,0 +1,76 @@
+---
+import Base from '../layouts/Base.astro';
+import Demo from '../components/Demo.astro';
+import Video from '../components/Video.astro';
+import { getProjects, num, statusLabel } from '../lib/projects';
+
+const projects = await getProjects();
+const jobs = [
+  ['AI Engineer, ByteForge', 'Dec 2025 – Present'],
+  ['Co-Founder & Backend Engineer, Khel', 'Jan 2026 – Present'],
+  ['Software Engineer, Infoetech', 'Nov 2023 – Dec 2025'],
+  ['Software Engineer, Ethisol', 'Mar 2023 – Nov 2023'],
+];
+---
+<Base
+  title="Mustafa Ahmed, AI Engineer"
+  description="I build AI agents and the backend around them, mostly the code that decides what an agent is allowed to do."
+>
+  <section class="intro wrap">
+    <span class="mono muted" style="font-size: 13px">AI Engineer · Lahore, GMT+5</span>
+    <h1>I'm an AI engineer at ByteForge. I build AI agents and the backend around them, mostly <em>the code that decides what an agent is allowed to do.</em></h1>
+  </section>
+
+  <Demo />
+
+  <section class="section wrap" id="work">
+    <div class="section-head">
+      <h2>Work</h2>
+      <span class="meta">Five projects, 2026</span>
+    </div>
+    {projects.map((p, i) => (
+      <article class="row">
+        <span class="num">{num(i)}</span>
+        <div class="row-main">
+          <h3><a href={`/projects/${p.id}/`}>{p.data.title}</a></h3>
+          <p class="summary">{p.data.summary}</p>
+          <p class="meta">
+            {p.data.year} · {statusLabel(p.data.status)} · {p.data.stack.join(', ')}
+            {p.data.code && <> · <a href={p.data.code}>Code ↗</a></>}
+          </p>
+          {p.data.video && <Video src={p.data.video} poster={p.data.poster} caption={p.data.video_caption} title={p.data.title} />}
+        </div>
+        <aside class="hook">
+          <span class="label">Hardest part</span>
+          <p>“{p.data.hook}”</p>
+        </aside>
+      </article>
+    ))}
+  </section>
+
+  <section class="section wrap split">
+    <div class="jobs">
+      <h2>Experience</h2>
+      <ol>
+        {jobs.map(([role, dates]) => (
+          <li><span>{role}</span><span class="meta">{dates}</span></li>
+        ))}
+      </ol>
+    </div>
+    <div class="about">
+      <h2 style="color: var(--ink)">About</h2>
+      <p>I started as a backend engineer. At Ethisol and then Infoetech I built Node.js services: payments and auth first, then the search, availability and checkout APIs for a tour-booking platform.</p>
+      <p>Since December 2025 I've been an AI engineer at ByteForge. Most of my work is on AI agents, and mostly on the parts around the model: permission checks that run in code instead of in the prompt, evidence the model has to quote exactly, and evals that tell me when a change made things worse. The projects above are where I work those out.</p>
+      <p>I also co-founded Khel, a turf-booking app for Pakistan, and wrote its Go backend. I live in Lahore and work remotely, on GMT+5.</p>
+    </div>
+  </section>
+
+  <section class="contact wrap" id="contact">
+    <p>Email me at <a href="mailto:mustafabukhari333@gmail.com">mustafabukhari333@gmail.com</a></p>
+    <nav class="links" aria-label="Contact links">
+      <a href="https://github.com/musishere">GitHub</a>
+      <a href="https://www.linkedin.com/in/musishere">LinkedIn</a>
+      <a href="/resume.pdf">Resume</a>
+    </nav>
+  </section>
+</Base>

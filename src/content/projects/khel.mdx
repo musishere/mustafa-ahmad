@@ -1,0 +1,84 @@
+---
+title: Khel
+summary: "A turf-booking app for Pakistan: players book slots, split the cost with friends and find matches. I co-founded it and wrote the Go backend."
+year: 2026
+status: in progress
+stack: [Go, Gin, GORM, PostgreSQL, Redis, React Native (Expo), AWS EKS]
+order: 2
+hook: "Matchmaking would pair someone with a player who was gone."
+video: /projects/khel/demo.mp4
+poster: /projects/khel/poster.jpg
+video_caption: "From the app's launch video: finding a turf, booking slots, splitting the cost."
+---
+import Note from '../../components/Note.astro';
+import Diagram from '../../components/diagrams/Khel.astro';
+
+## Problem
+
+Booking a turf in Lahore, Karachi or Islamabad still runs on phone calls, WhatsApp groups and cash. When a group plays, one person usually pays and then chases everyone else for their share.
+
+## What I built
+
+<Note label="A booking's clock">
+  <ul class="mono">
+    <li><em>request</em> · pays nothing yet</li>
+    <li><em>approve</em> · slots held, same transaction</li>
+    <li><em>+45 min</em> · payment window, per turf</li>
+    <li><em>−15 min</em> · deadline warning</li>
+    <li><em>+15 min</em> · no-show grace, then released</li>
+  </ul>
+  <em>A worker checks every booking once a minute.</em>
+</Note>
+
+The backend is Go on Postgres and Redis, with a React Native app on top.
+
+A booking starts as a request, and the player pays nothing until the turf owner approves it. On approval, the booked slots are written as holds in the same transaction. Postgres, not the application, stops two bookings from getting the same slot:
+
+```sql
+CREATE UNIQUE INDEX IF NOT EXISTS idx_slot_holds_active_unique
+  ON booking_slot_holds (turf_id, hold_date, slot_label)
+  WHERE status = 'active';
+```
+
+The index only covers active holds, so a cancelled or expired booking frees its slot without anything having to delete a row. A duplicate-key error on insert becomes a `SlotConflictError` the app can show.
+
+After approval the player has a payment window, 45 minutes by default and set per turf. A worker that runs every minute moves bookings along. It cancels unpaid ones, marks shortfalls, warns 15 minutes before a deadline, marks no-shows after a 15-minute grace period, and releases holds whose time has passed.
+
+For split payments, the organiser pays their share of the advance to lock the slot and gets a check-in PIN straight away. Friends then get payment requests for their share, paid through JazzCash, EasyPaisa or Raast with a screenshot as proof. The deadline pauses while a proof is being reviewed.
+
+Matches use an ELO rating that starts at 1000 and moves with K=32 after each reported result. Badges and weekly streaks sit on top.
+
+## How it fits together
+
+<Diagram />
+
+## Hardest part
+
+<Note label="Both fixes">
+  <ul class="mono"><li><em>stale ticket</em> → dropped if its player isn't connected</li><li><em>duplicate match</em> → unique index on the unordered pair</li></ul>
+</Note>
+
+Stale matchmaking tickets. Tickets from players who had already disconnected stayed in the queue, so matchmaking would pair someone with a player who was gone and drop them into an empty "Opponent" chat. Tickets are now dropped when their player isn't connected.
+
+A related bug created duplicate pending matches for the same two players. A unique index on the unordered pair of player ids fixed it at the database.
+
+## Tradeoff
+
+The auto-pairing matcher compares every waiting player with every other one. That's O(N²), and it's fine at Khel's size today. Pairing already filters to players within 20 km, so when it stops being fine, the upgrade is a spatial query or Redis GeoHash.
+
+## Numbers
+
+Khel hasn't launched yet, so there are no usage numbers to report. This is the size of the system as of 29 September 2026:
+
+| What | Count | Where it comes from |
+| --- | --- | --- |
+| REST route groups | 18 | `Khel-Backend`, `/api/v1` |
+| WebSocket endpoints | 3 | chat, matchmaking, admin feed |
+| Domain modules | 8 | `modules.WireAll` |
+| SQL migrations | 56 | golang-migrate |
+| Third-party APIs | 9 | FCM, Anthropic, PayFast, Stripe and 5 more |
+| Backend replicas | 1 | `Khel-backend-k8` deployment |
+
+## What I'd change
+
+It isn't ready for a public launch. Payments still run against mock and stub providers, and the booking worker needs far more tests than it has, since it moves bookings between payment states on its own.

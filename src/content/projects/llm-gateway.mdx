@@ -1,0 +1,72 @@
+---
+title: LLM Gateway
+summary: "A FastAPI proxy in front of the Claude API that authenticates tenants, rate-limits them, holds a monthly token quota and meters every call, streamed ones included."
+year: 2026
+status: in progress
+stack: [Python, FastAPI, httpx, PostgreSQL, Redis, Terraform, Oracle Cloud]
+order: 5
+hook: "Twenty requests arriving together all read the same old count and all got through."
+---
+
+## Problem
+
+The gateway works like a front desk for the model API: it checks who's calling, sends the request on, and writes down what it cost. The limits are there to stop a tenant calling too fast or using too much before any money is spent. It's the first of eight projects that grow into one LLM platform. I'm building them to learn how each layer works and where it breaks.
+
+## What I built
+
+A request to `POST /v1/messages` goes through these steps in order:
+
+1. Look up the tenant from `x-api-key`. Keys are `gw_` plus 32 random bytes, stored as SHA-256 hashes. Unknown key: 401. Database down: 503.
+2. Take a ticket from the tenant's rate-limit bucket. No ticket: 429 with `retry-after`.
+3. Read the body, up to 32 MB.
+4. Hold quota: reserve the call's estimated tokens against the tenant's monthly quota, like a card hold at a hotel. Over quota: 429.
+5. Write a usage row, then forward the body unchanged, with header allowlists in both directions.
+6. When the response finishes, update the row with the real token counts and cost, and settle the hold.
+
+Streamed replies pass through chunk by chunk while the gateway reads token counts from the SSE events. Every ending is recorded in an `outcome` column: `complete`, `client_disconnected` or `upstream_error`.
+
+The rate limit and the quota both live in Redis as Lua scripts, so they stay correct when more than one copy of the gateway runs. The Terraform for Oracle Cloud is split in two. A permanent bootstrap stack holds the state bucket and the $20 and $50 budget alerts. A cluster stack gets destroyed between sessions, and it can't take the state or the alerts with it.
+
+{/* TODO: architecture diagram */}
+
+## Hardest part
+
+The quota race. My first version checked usage before the call and added the tokens after. Twenty requests arriving together all read the same old count and all got through, up to twenty calls over quota.
+
+The fix is the hold. One Lua script, which Redis runs with nothing in between, checks the counter and reserves the estimate in the same step:
+
+```lua
+local used = redis.call('GET', KEYS[1])
+if not used then return 'missing' end
+used = tonumber(used)
+local quota = tonumber(ARGV[1])
+if used >= quota then return -1 end
+local hold = math.min(tonumber(ARGV[2]), quota - used)
+redis.call('INCRBY', KEYS[1], hold)
+return hold
+```
+
+After the call, the hold is swapped for the real count. If Redis loses the counter, it's rebuilt from Postgres, in-flight holds included.
+
+## Tradeoff
+
+Fail closed before spending, fail open after. If Postgres or Redis is down before the call, the gateway returns 503: nothing has been spent, and without limits a runaway tenant could spend without bound. Once the model has answered, a failed metering write is logged and the response still goes out, because failing then would make the caller retry and pay twice.
+
+The hold is for a typical answer, 500 output tokens, not `max_tokens`. Holding the maximum would refuse a tenant with 1,000 tokens left for asking for 4,000.
+
+When a client disconnects mid-stream, the output tokens are estimated at about four characters per token and flagged. Leaving them NULL would let a tenant get output for free by disconnecting.
+
+## Numbers
+
+{/* TODO: fill in how the concurrency test was run, and add a "Latency the gateway adds" row once it's measured */}
+
+| Metric | Value | How I measured it |
+| --- | --- | --- |
+| Quota under concurrency | 20 requests at once, 100 tokens left: 4 allowed, 0 over quota | concurrency test |
+| Default limits | burst of 20, refill 1 per second, 1,000,000 tokens a month | configured per tenant |
+
+## What I'd change
+
+The Kubernetes cluster never came up. Oracle's Mumbai region was out of capacity for free ARM nodes, so the gateway runs locally for now and the cluster stack is torn down. Cost doesn't count prompt-cache tokens yet. And once a streamed reply has started with a 200, a failure halfway through can't become an HTTP error; the client just sees the stream end.
+
+Next on the list: the cluster itself, then Argo CD and a pipeline that builds, scans and deploys.

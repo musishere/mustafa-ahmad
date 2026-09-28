@@ -1,0 +1,79 @@
+---
+title: Compliance Copilot
+summary: "An agent that checks a company's GitHub and AWS settings against SOC 2, GDPR and HIPAA controls, cites the evidence behind each finding, and drafts a fix for each gap. It never applies anything itself."
+year: 2026
+status: in progress
+stack: [Python, FastAPI, PostgreSQL, Chroma, Langfuse, React]
+order: 1
+hook: "The second direction let a real quote through with invented text attached."
+video: /projects/compliance-copilot/demo.mp4
+poster: /projects/compliance-copilot/poster.jpg
+video_caption: "One check from start to finish: CC6.1, root account MFA, on AWS. The agent calls check_control, reports a gap, and drafts a fix that waits in the approvals queue."
+---
+import Note from '../../components/Note.astro';
+import Diagram from '../../components/diagrams/ComplianceCopilot.astro';
+
+## Problem
+
+Small companies get asked to prove they're secure before an enterprise customer will sign. A consultant costs more than they can pay, and doing it by hand takes hundreds of hours. But a lot of the evidence sits in settings an API can read, like whether the AWS root account has MFA turned on.
+
+I wanted an agent that reads those settings, says which controls pass and which don't, and shows exactly where it looked.
+
+## What I built
+
+<Note label="A run gives up after">
+  <ul class="mono"><li>10 steps</li><li>$0.50 of model spend</li><li>an API error</li></ul>
+  <em>and reports <code>unknown</code> instead of guessing.</em>
+</Note>
+
+One agent loop with five tools. `check_control` reads a control's current state from GitHub, through a GitHub App, or from AWS, through a cross-account role. `read_policy` and `retrieve_policy` fetch the control text, the second through vector search in Chroma. `draft_fix` writes a proposed fix in a separate model call, and `submit_finding` ends the run.
+
+Every tool call goes through a permission gate before it runs. The gate answers allow, deny or ask. Ask pauses the run, saves a checkpoint and waits for someone to approve or deny it. There are no write tools at all right now, so nothing the agent can call changes a customer's systems.
+
+Before a finding is saved, `lint_finding` checks it. A finding that says compliant or gap needs at least one piece of evidence, every piece has to trace back to a tool result, and the suggested fix can't read as legal advice or claim things the sources don't support. Violations go back to the model and it tries again. A run gives up and reports `unknown` after 10 steps, $0.50 of model spend, or an API error.
+
+Around the loop: FastAPI with JWT auth, where the tenant id always comes from the token and never from the request. Regex checks for prompt injection and PII run before any model call. There's a per-tenant budget, Postgres for findings and approvals, Langfuse for traces, and a daily job that re-scans every connected tenant.
+
+## How it fits together
+
+<Diagram />
+
+## Hardest part
+
+<Note label="Evidence check">
+  <ul class="mono"><li><em>before</em> evidence ⊂ source, or source ⊂ evidence</li><li><em>now</em> evidence ⊂ source, only</li></ul>
+</Note>
+
+Making the citations mean something. The first check accepted a match in either direction: the evidence inside a tool result, or a tool result inside the evidence. The second direction let a real quote through with invented text attached. "Root account MFA not enforced and the company has a documented history of breaches" passed, because the real string "Root account MFA not enforced" was inside it.
+
+Now it only goes one way. Each piece of evidence has to appear, exactly, inside something a tool returned during the same run:
+
+```python
+return [item for item in evidence if not any(item in source for source in known_sources)]
+```
+
+That's stricter than it needs to be. A paraphrase of real evidence gets rejected too, and the model has to retry with the exact wording. But padding can't get through.
+
+## Tradeoff
+
+<Note label="When a check is down">
+  <ul class="mono"><li>Citation match: fails closed</li><li>Approval gate: fails closed</li><li><em>Off-topic judge: fails open</em></li><li><em>Faithfulness judge: fails open</em></li></ul>
+</Note>
+
+The grounding check and the approval gate fail closed. The LLM-judge guardrails, the off-topic classifier and the faithfulness judge, fail open. If a judge is down, checks keep running without it. If a citation doesn't match or an approval is missing, nothing goes through. The judges are extra checks on top; the citation match and the approval gate are the ones a finding can't get past.
+
+## Numbers
+
+| Metric | Value | How I measured it |
+| --- | --- | --- |
+| Golden eval | 10 of 20 cases pass | `make eval`, run on 2026-09-22 |
+| Fix quality | 0.625 | LLM judge with a rubric, same run |
+| Fixed overhead per agent step | 709 tokens | counted with tiktoken |
+| Policy corpus | 195 documents, 417 chunks | ingest pipeline output |
+| Controls with real checks | 5 on GitHub, 4 on AWS | implemented checks |
+
+## What I'd change
+
+Seven of the ten failing eval cases never called `check_control` at all. I've been testing on free models, which are unreliable at multi-step loops, so that's the first thing to rule out.
+
+The eval isn't in CI and there's no saved baseline, so nothing stops a prompt change from making it worse. Tenant isolation lives only in application code; I'd add Postgres row-level security so one missed `WHERE` can't leak another tenant's findings. And the injection and PII checks are regexes, which catch the obvious cases and not much more.

@@ -1,0 +1,53 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Video from '../../components/Video.astro';
+import { getProjects, num, statusLabel } from '../../lib/projects';
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((project, i) => ({
+    params: { slug: project.id },
+    props: { project, index: i, next: projects[(i + 1) % projects.length], nextIndex: (i + 1) % projects.length },
+  }));
+}
+
+const { project, index, next, nextIndex } = Astro.props;
+const { Content, headings } = await render(project);
+const d = project.data;
+const sections = headings.filter((h) => h.depth === 2);
+---
+<Base title={`${d.title} — Mustafa Ahmed`} description={d.summary}>
+  <section class="project-head wrap">
+    <a class="back" href="/#work">← All work</a>
+    <span class="meta" style="font-size: 13px">
+      {num(index)} · {d.year} · {statusLabel(d.status)} · {d.code ? <a href={d.code}>Code ↗</a> : 'Repo private'}
+    </span>
+    <h1>{d.title}</h1>
+    <p class="dek">{d.summary}</p>
+    <span class="meta" style="font-size: 13px">{d.stack.join(' · ')}</span>
+  </section>
+
+  {d.video && (
+    <div class="project-media wrap">
+      <Video src={d.video} poster={d.poster} caption={d.video_caption} title={d.title} />
+    </div>
+  )}
+
+  <div class="wrap">
+    <article class="prose">
+      <aside class="note toc">
+        <span class="label">On this page</span>
+        <nav aria-label="On this page">
+          {sections.map((h) => <a href={`#${h.slug}`}>{h.text}</a>)}
+        </nav>
+      </aside>
+      <Content />
+    </article>
+
+    <nav class="next" aria-label="Next project">
+      <span class="label">Next · {num(nextIndex)}</span>
+      <a href={`/projects/${next.id}/`}>{next.data.title} →</a>
+    </nav>
+  </div>
+</Base>
