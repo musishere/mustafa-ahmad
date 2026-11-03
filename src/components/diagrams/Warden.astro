@@ -1,0 +1,10 @@
+<figure class="wide flow" role="img" aria-label="Flow. An MCP agent acting for a signed-in user sends every call to Warden. Warden checks the pass, runs 7 checks and writes an audit row, then forwards the call to a tool server with a one-minute, one-tool token. Refused calls are never forwarded.">
+<div class="flow-row">
+<div class="flow-box"><b>MCP agent</b><span>Claude Code · VS Code · tickmark.agent</span><span>acts for the signed-in user</span></div>
+<span class="flow-arrow" aria-hidden="true">→</span>
+<div class="flow-box gate"><b>Warden</b><span>pass → 7 checks → audit row</span><span class="refuse">refused calls are never forwarded</span></div>
+<span class="flow-arrow" aria-hidden="true">→</span>
+<div class="flow-box"><b>Tool servers</b><span>Tickmark · any MCP server</span><span>no public address · 1-minute, one-tool token</span></div>
+</div>
+<div class="flow-log">append-only audit log · PostgreSQL triggers block UPDATE and DELETE</div>
+</figure>

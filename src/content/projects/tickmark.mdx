@@ -1,0 +1,92 @@
+---
+title: Tickmark
+summary: "An AI audit agent that checks each row of an Excel invoice sample against its invoice PDF and gives it a mark, a reason and the trail behind it. AI reads, code decides."
+year: 2026
+status: in progress
+stack: [Python 3.12, FastAPI, PostgreSQL, Azure Document Intelligence, Office.js]
+order: 2
+featured: true
+highlights:
+  - "A \"matched\" mark must never be wrong: when unsure, it says \"needs review\""
+  - "Code makes every call: Decimal money with ±0.01 tolerance, VAT, audit period, duplicates"
+  - "Append-only Postgres audit store; row-level security isolates each firm and engagement"
+  - "30/30 real e-invoices, 34/40 varied originals, zero false matches; CI fails on any"
+hook: "Azure's confidence score didn't separate right values from wrong ones."
+code: https://github.com/musishere/Warden-tickmark
+---
+import Note from '../../components/Note.astro';
+
+## Problem
+
+Auditors take a sample from a company's books, for example 40 invoices the company says it received. Each row is a claim: "We got invoice 73459321 from Hernandez, English and Yoder on 19 Nov 2013 for 495.30 USD." Checking each claim against the real invoice is called vouching, and it's slow, careful work done by hand.
+
+## What I built
+
+<Note label="The four marks">
+  <ul class="mono">
+    <li><em>matched</em> · the invoice backs up the row</li>
+    <li><em>difference</em> · the invoice contradicts it</li>
+    <li><em>needs review</em> · a person should look</li>
+    <li><em>no evidence</em> · no invoice found</li>
+  </ul>
+</Note>
+
+Tickmark reads the sample, links each row to one PDF, compares them and gives every row a mark with a written reason. One rule comes before all the others: a "matched" mark must never be wrong. A wrong match hides a real problem, while a "needs review" that turns out fine costs someone a minute. When it's unsure, Tickmark says "needs review".
+
+AI reads, code decides. The LLM only suggests what each spreadsheet column means when the layout is unfamiliar. Code makes every call, with `Decimal` money and a ±0.01 tolerance, allowed VAT rates, the audit period, duplicates and line totals.
+
+Reading is a hybrid. pdfplumber reads each PDF's own text first, and only the hard ones (scans, broken or rotated text) go to Azure Document Intelligence. Azure results are cached by the file's SHA-256, so a PDF is never paid for twice.
+
+Everything is kept in an append-only, multi-tenant Postgres store. Triggers block `UPDATE`, `DELETE` and `TRUNCATE`, row-level security isolates each firm and client engagement and denies by default, and every file is stored by its hash so any run can be checked again.
+
+There are three front ends: a web app with live progress, an Excel add-in (Office.js) that writes colour-coded verdict columns and opens the matching invoice on row click, and a command-line agent that works through [Warden](/projects/warden/).
+
+## How it fits together
+
+1. **Columns.** Work out which column holds the invoice number, vendor, amount and date.
+2. **Read.** Extract every PDF, 8 at a time: local text first, Azure only where needed.
+3. **Trust.** Decide which values read from the PDF can be relied on.
+4. **Link.** Pick each row's PDF, or none.
+5. **Compare.** Compare the row's fields with the invoice's.
+6. **Check.** Run checks on the invoice by itself: VAT, period, duplicates, totals.
+7. **Decide.** Give the mark, the reason and the trail.
+
+Behind Warden, the command-line agent swaps the user's token for a 15-minute pass limited to one client and two actions, and Tickmark's tools accept only 60-second RS256 tokens verified against Warden's JWKS.
+
+## Hardest part
+
+<Note label="What counts as confirmed">
+  <ul class="mono">
+    <li><em>printed</em> · exactly so on the page</li>
+    <li><em>arithmetic</em> · net + VAT = total</li>
+    <li><em>never</em> · copied from the row being tested</li>
+  </ul>
+</Note>
+
+Trusting a value. Reading a number off a PDF isn't enough: Tickmark has to know whether the reading is right. Azure reports a confidence score with every value it reads, so I measured it, and confidence alone didn't separate right values from wrong ones.
+
+So a value now counts as confirmed only when something independent backs it: the arithmetic checks out, or it is printed exactly so on the page. A reading is never "fixed" by copying the row being tested, because that would let a wrong row prove itself. An unconfirmed value may agree with the row, but it can never contradict it.
+
+## Tradeoff
+
+The local reader is free and instant. Azure handles scans, photos and any layout, but costs about $10 per 1,000 pages and takes around 15 seconds each. Local first keeps runs cheap, at the price of more misses on unlabelled dates and numbers, which then go to Azure anyway.
+
+## Numbers
+
+The test labels are written by a person reading each rendered invoice, never taken from Tickmark's own reading. Sample sheets contain planted mistakes. Two numbers must always be zero, and the evals fail CI otherwise: wrong links and false matches.
+
+| Set | Result | Wrong links / false matches |
+| --- | --- | --- |
+| Generated · external · hard | 16/16 · 7/7 · 11/11 | 0 |
+| 30 real ZUGFeRD e-invoices | 30/30 | 0 |
+| Varied originals (images, other layouts, stray pages) | 34/40 | 0 |
+
+Some rules were tuned while looking at these sets, so treat the scores as optimistic. It's backed by 171 pytest tests.
+
+## What I'd change
+
+- A held-out set of 50–100 invoices, run only at milestones, for an honest score.
+- Uploads and jobs live in process memory, so it isn't safe with several workers. They belong in Blob storage and a queue.
+- The web app and add-in don't sign in through Warden yet; the firm still comes from the page.
+- Highlight the value on the PDF, so a reviewer doesn't have to find it.
+- Split PDFs that hold several invoices instead of marking them ambiguous.

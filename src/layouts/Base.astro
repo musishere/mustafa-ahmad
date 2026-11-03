@@ -7,6 +7,8 @@ interface Props {
 }
 const { title, description } = Astro.props;
 const built = new Date().toLocaleDateString('en-CA');
+const image = new URL('/me.jpg', Astro.site);
+const cv = '/resume.pdf';
 ---
 <!doctype html>
 <html lang="en">
@@ -17,27 +19,37 @@ const built = new Date().toLocaleDateString('en-CA');
   <meta name="description" content={description}>
   <meta property="og:title" content={title}>
   <meta property="og:description" content={description}>
+  <meta property="og:image" content={image}>
+  <meta name="twitter:card" content="summary">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header class="site-header wrap">
-    <a class="name" href="/">Mustafa Ahmed</a>
-    <nav class="links" aria-label="Elsewhere">
-      <a href="https://github.com/musishere">GitHub</a>
-      <a href="https://www.linkedin.com/in/musishere">LinkedIn</a>
-      <a href="/resume.pdf">Resume</a>
-      <a href="mailto:mustafabukhari333@gmail.com">Email</a>
-    </nav>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/"><b>Mustafa Ahmed</b><span>Applied AI Engineer</span></a>
+      <nav class="site-nav" aria-label="Sections">
+        <a href="/#work">Work</a>
+        <a href="/#skills">Skills</a>
+        <a href="/#demo">Demo</a>
+        <a href="/#experience">Experience</a>
+        <a class="btn btn-primary" href={cv}>
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Download CV
+        </a>
+      </nav>
+    </div>
   </header>
   <main>
     <slot />
   </main>
-  <footer class="site-footer wrap">
-    <span>Last updated {built}</span>
-    <a href="https://github.com/musishere/mustafa-ahmad">Source</a>
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>© {new Date().getFullYear()} Mustafa Ahmed · Last updated {built}</span>
+      <a href="https://github.com/musishere/mustafa-ahmad">Source ↗</a>
+    </div>
   </footer>
 </body>
 </html>
