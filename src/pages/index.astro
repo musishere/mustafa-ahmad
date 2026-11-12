@@ -2,6 +2,9 @@
 import Base from '../layouts/Base.astro';
 import Demo from '../components/Demo.astro';
 import Video from '../components/Video.astro';
+import WardenPanel from '../components/WardenPanel.astro';
+import Envelope from '../components/Envelope.astro';
+import Workbench from '../components/Workbench.astro';
 import { getProjects, num, statusLabel } from '../lib/projects';
 
 const projects = await getProjects();
@@ -10,22 +13,11 @@ const others = projects.filter((p) => !p.data.featured);
 const index = (id: string) => projects.findIndex((p) => p.id === id);
 const email = 'mustafabukhari333@gmail.com';
 
-// A static example of Warden's rulebook refusing a pass (checks and reason from warden/docs/how-it-works.md).
-const checks = [
-  ['agent registered for this scope', 'pass'],
-  ['engagement is in your firm', 'pass'],
-  ['user exists and is active', 'pass'],
-  ['ethical wall', 'fail'],
-  ['member of the engagement', 'skip'],
-  ['role allows the scope', 'skip'],
-];
-const mark = { pass: '✓', fail: '✗', skip: '·' };
-
 const stats = [
   ['3.5+ yrs', 'Backend engineering, from payments and auth to AI agents', 'since Mar 2023'],
   ['7 checks', 'Fail-closed, on every tool call an agent makes', 'Warden'],
   ['74 tests', 'Named as security promises, each proven by breaking its check', 'Warden'],
-  ['30/30', 'Real ZUGFeRD e-invoices vouched, zero false matches', 'Tickmark'],
+  ['30/30', 'Scored on real ZUGFeRD e-invoices, the German/EU standard', 'Tickmark'],
 ];
 
 // `shown` entries are project ids (linked) or plain names (no page).
@@ -33,7 +25,7 @@ const skills = [
   { title: 'AI & LLM systems', blurb: 'Agents whose tool access, approvals and evals are enforced in code.',
     chips: ['Claude API', 'MCP', 'LangGraph', 'LangChain', 'RAG', 'pgvector', 'Structured outputs', 'Agent evals', 'Guardrails', 'Prompt-injection testing', 'Human-in-the-loop'],
     shown: ['warden', 'tickmark', 'Standwise'] },
-  { title: 'Backend', blurb: 'Production APIs and services in four languages.',
+  { title: 'Backend', blurb: 'APIs and services in four languages.',
     chips: ['Python · FastAPI', 'TypeScript · NestJS', 'C# · ASP.NET Core', 'Go · Gin', 'Node.js', 'REST', 'Microservices', 'Socket.IO'],
     shown: ['Standwise', 'khel', 'llm-gateway'] },
   { title: 'Identity & security', blurb: 'Who an agent acts for, and what it may never do.',
@@ -44,7 +36,7 @@ const skills = [
     shown: ['tickmark', 'khel', 'incidentiq'] },
   { title: 'Cloud & DevOps', blurb: 'Shipped on AWS and Azure, with infrastructure as code.',
     chips: ['AWS ECS Fargate', 'AWS EKS', 'Azure Container Apps', 'Key Vault', 'Bicep', 'Terraform', 'Docker', 'Kubernetes', 'GitHub Actions'],
-    shown: ['warden', 'Standwise', 'khel'] },
+    shown: ['warden', 'Standwise'] },
   { title: 'Observability & testing', blurb: 'Traces, metrics and CI evals that block a bad merge.',
     chips: ['OpenTelemetry', 'Prometheus', 'Grafana', 'Tempo', 'Langfuse', 'pytest', 'xUnit'],
     shown: ['llm-gateway', 'compliance-copilot'] },
@@ -58,35 +50,42 @@ const marks = [
   ['none', 'no evidence', 'No invoice found for this row'],
 ];
 
-const jobs = [
-  { dates: 'Dec 2025 – Present', role: 'AI Engineer (Solutions)', org: 'ByteForge',
-    lead: 'Architected and built Standwise, a multi-tenant, chat-first SaaS work platform for HR and project management, running with ByteForge as its first tenant.',
+// Wording stays within career-ops/cv.md.
+const experience = [
+  { note: 'Current', org: 'ByteForge', role: 'AI Engineer (Solutions)', dates: 'Dec 2025 – Present',
+    lead: 'Architected and built Standwise, a multi-tenant, chat-first SaaS work platform for HR and project management, now in a pre-launch pilot with ByteForge as its first tenant.',
     bullets: [
-      'AI standup engine on the Claude API: routes tasks across Haiku, Sonnet and Opus, turns free-text updates into structured data, flags implied blockers, and posts summaries and lead alerts to Slack',
-      '“Code decides, LLM writes”: sprint detection, risk rules, metrics and permissions run in tested code, and the model only writes the language',
-      'Guardrails: zod-validated outputs with retry, versioned prompts, redaction of sensitive HR data, human approval before any AI write to Jira or calendars, and CI evals that block merges on regression',
-      'Three-layer tenant isolation: query scoping, PostgreSQL row-level security and a CI isolation test suite',
+      'AI standup engine on the Claude API: turns free-text updates into structured data, flags implied blockers and posts summaries to Slack, routing each task to Haiku, Sonnet or Opus by complexity to control cost',
+      '“Code decides, LLM writes”: sprint detection, risk rules, metrics and permissions run in tested code, and the model only writes the narrative',
+      'Guardrails: validated structured outputs with retry, versioned prompts, HR data redaction, human approval before any AI write to Jira or calendars, audit logs of every agent action, and CI hallucination checks that block merges',
+      'Three-layer tenant isolation: query scoping, PostgreSQL row-level security and a CI isolation suite, with scoped RBAC',
     ],
     stack: ['TypeScript', 'NestJS', 'PostgreSQL', 'Redis', 'AWS ECS Fargate', 'Claude API'] },
-  { dates: 'Jan 2026 – Present', role: 'Founder & Software Engineer', org: 'Khel',
-    lead: 'Designed and built a pre-launch turf-booking platform for Pakistan end to end: product, Go backend, React Native app, payments and matchmaking.',
+  { note: 'Part-time venture', org: 'Khel', role: 'Founder', dates: 'Jan 2026 – Present',
+    lead: 'A sports social platform for Pakistan combining turf booking, skill-based matchmaking, a live feed, player profiles and venue business accounts. I own product and engineering end to end and work directly with customers.',
     bullets: [
-      'Reservation system that handles booking conflicts, payment deadlines and partial payments',
-      'Peer-to-peer split payments, so players share a booking’s cost without a third-party gateway',
-      'ELO-based player rating for skill-based matchmaking, plus badges and streaks',
+      'Go backend and a reservation engine that handles slot conflicts, payment deadlines and partial payments',
+      'In-house peer-to-peer split payments, so players share a booking’s cost',
+      'ELO ratings from match results for matchmaking, badges and streaks for retention, and the React Native mobile app',
     ],
-    stack: ['Go', 'Gin', 'PostgreSQL', 'Redis', 'React Native', 'AWS EKS'] },
-  { dates: 'Nov 2023 – Dec 2025', role: 'Software Engineer', org: 'Infoetech',
+    stack: ['Go', 'React Native', 'PostgreSQL'] },
+  { note: 'Past role', org: 'Infoetech', role: 'Software Engineer', dates: 'Nov 2023 – Dec 2025',
     lead: 'REST APIs and microservices powering search, availability and checkout for a tour-booking platform.',
     bullets: [
-      'Faster APIs through database index tuning and Redis caching',
-      'Zero-downtime AWS deployments with Docker and Kubernetes',
+      'Real-time availability updates with Socket.IO, so customers see current slots without refreshing',
+      'Reduced latency on the search and checkout endpoints through database index tuning and Redis caching',
+      'Zero-downtime deployments on AWS using Docker and Kubernetes',
     ],
-    stack: ['Node.js', 'Express', 'Socket.IO', 'Redis', 'Docker', 'Kubernetes'] },
-  { dates: 'Mar 2023 – Nov 2023', role: 'Software Engineer', org: 'Ethisol',
-    lead: 'Backend services in Node.js and MongoDB with Stripe and PayPal payments.',
-    bullets: ['JWT authentication and role-based access control for enterprise client apps'],
-    stack: ['Node.js', 'MongoDB', 'Stripe', 'PayPal', 'JWT'] },
+    stack: ['Node.js', 'Express', 'Socket.IO', 'Redis', 'AWS', 'Kubernetes'] },
+  { note: 'Past role', org: 'Ethisol', role: 'Software Engineer', dates: 'Mar 2023 – Nov 2023',
+    lead: 'Backend services in Node.js and MongoDB for enterprise client applications.',
+    bullets: [
+      'Integrated Stripe and PayPal payments into client applications',
+      'JWT authentication and role-based access control to secure those applications',
+    ],
+    stack: ['Node.js', 'MongoDB', 'Stripe', 'PayPal'] },
+  { note: 'Education', org: 'University of Lahore', role: 'BSc Computer Science', dates: '2026',
+    lead: 'Computer Science degree, class of 2026.', bullets: [], stack: [] },
 ];
 
 const titleOf = (id: string) => projects.find((p) => p.id === id)?.data.title;
@@ -96,77 +95,27 @@ const titleOf = (id: string) => projects.find((p) => p.id === id)?.data.title;
   description="Applied AI Engineer with 3.5+ years of backend engineering, building governed AI agents for regulated work: tool permissions in code, human review gates, evals and audit trails."
 >
   <section class="hero wrap" id="top">
-    <div class="hero-top">
-      <div class="hero-main">
-        <div class="who">
-          <img class="avatar" src="/me.jpg" width="72" height="72" alt="Mustafa Ahmed">
-          <div>
-            <b>Mustafa Ahmed</b>
-            <span class="pill"><span class="dot"></span>Open to remote or relocation · Lahore, GMT+5</span>
-          </div>
-        </div>
-        <h1>Applied AI Engineer building governed AI agents for regulated work.</h1>
-        <p class="lede">3.5+ years of backend engineering. I build the parts around the model: tool permissions enforced in code, human review gates, evals and audit trails.</p>
-        <p class="langs">Python · TypeScript · Go · C#</p>
-        <div class="cta">
-          <a class="btn btn-primary" href="/resume.pdf">
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-            Download CV
-          </a>
-          <a class="btn" href={`mailto:${email}`}>Email me</a>
-          <a class="link" href="#demo">Try the live agent ↓</a>
-        </div>
+    <div class="hero-head">
+      <img class="avatar hero-avatar" src="/me.jpg" width="112" height="112" alt="Mustafa Ahmed">
+      <p class="tag">Applied AI Engineer · Author of Warden</p>
+      <h1>I build <span class="key k1">governed</span> <span class="key k2">audited</span> AI agents for <span class="key k3">regulated</span> work.</h1>
+      <p class="lede">3.5+ years of backend engineering. I build the parts around the model: tool permissions enforced in code, human review gates, evals and audit trails.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="/resume.pdf">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Download CV
+        </a>
+        <a class="btn" href={`mailto:${email}`}>Email me</a>
+        <a class="link" href="#demo">Try the live agent ↓</a>
       </div>
-
-      <figure class="decision">
-        <div class="decision-card">
-          <div class="decision-bar"><span>warden · pass request</span><b>403</b></div>
-          <dl>
-            <dt>agent</dt><dd>tickmark.agent</dd>
-            <dt>for</dt><dd>Sara · Staff on Coke</dd>
-            <dt>asks for</dt><dd>Pepsi 2026 · vouch.run</dd>
-          </dl>
-          <ol>
-            {checks.map(([label, result], i) => (
-              <li class={result}><span>{i + 1}</span><span>{mark[result as keyof typeof mark]}</span><span>{label}</span></li>
-            ))}
-          </ol>
-          <div class="decision-out">
-            <span>refused: "ethical wall: Works on Coke 2026"</span>
-            <span>audit row written · checks 5–6 never ran</span>
-          </div>
-        </div>
-        <figcaption>From Warden's rulebook: the first "no" ends it. Tool calls add check 7, "is this action on the pass?"</figcaption>
-      </figure>
     </div>
+
+    <WardenPanel />
 
     <div class="tiles">
       {stats.map(([value, label, source]) => (
         <div class="tile"><b>{value}</b><span>{label}</span><small>{source}</small></div>
       ))}
-    </div>
-  </section>
-
-  <section class="section" id="skills">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>Skills</h2>
-        <p>Grouped by what I use them for, with where to see each one</p>
-      </div>
-      <div class="skills">
-        {skills.map((g) => (
-          <div class="skill">
-            <div>
-              <h3>{g.title}</h3>
-              <p>{g.blurb}</p>
-            </div>
-            <ul class="chips">{g.chips.map((c) => <li>{c}</li>)}</ul>
-            <p class="shown">Shown in {g.shown.map((s, i) => (
-              <>{i > 0 && ' · '}{titleOf(s) ? <a href={`/projects/${s}/`}>{titleOf(s)}</a> : s}</>
-            ))}</p>
-          </div>
-        ))}
-      </div>
     </div>
   </section>
 
@@ -223,7 +172,7 @@ const titleOf = (id: string) => projects.find((p) => p.id === id)?.data.title;
               <span>{num(index(p.id))} · {p.data.year}</span>
               <span class={p.data.status === 'finished' ? 'badge ok' : 'badge'}>{statusLabel(p.data.status)}</span>
             </div>
-            <h4><a href={`/projects/${p.id}/`}>{p.data.title}</a></h4>
+            <h4><a href={`/projects/${p.id}/`}>{p.data.title}<span class="arrow" aria-hidden="true">→</span></a></h4>
             <p class="summary">{p.data.summary}</p>
             {p.data.hook && (
               <div class="hook">
@@ -246,42 +195,32 @@ const titleOf = (id: string) => projects.find((p) => p.id === id)?.data.title;
         <h2>Experience</h2>
         <a class="link" href="/resume.pdf">Full resume (PDF) ↓</a>
       </div>
-      <ol class="jobs">
-        {jobs.map((j) => (
-          <li class="job">
-            <span class="job-dates">{j.dates}</span>
-            <div class="job-main">
-              <h3>{j.role} <span>· {j.org}</span></h3>
-              <p>{j.lead}</p>
-              <ul>{j.bullets.map((b) => <li>{b}</li>)}</ul>
-              <ul class="chips">{j.stack.map((s) => <li>{s}</li>)}</ul>
-            </div>
-          </li>
-        ))}
-        <li class="job">
-          <span class="job-dates">Education</span>
-          <div class="job-main">
-            <h3>Bachelor of Computer Science <span>· University of Lahore</span></h3>
-          </div>
-        </li>
-      </ol>
+      <Envelope items={experience} />
     </div>
   </section>
 
-  <section class="contact wrap" id="contact">
-    <div class="contact-card">
-      <div class="contact-head">
-        <img class="avatar" src="/me.jpg" width="56" height="56" alt="">
-        <h2>Hiring an Applied AI or backend engineer?</h2>
+  <section class="section" id="skills">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Skills</h2>
+        <p>Grouped by what I use them for, with where to see each one</p>
       </div>
-      <p>Remote, or open to relocation. Based in Lahore, GMT+5.</p>
-      <a class="email" href={`mailto:${email}`}>{email}</a>
-      <div class="cta">
-        <a class="btn btn-primary" href={`mailto:${email}`}>Email me</a>
-        <a class="btn" href="/resume.pdf">Download CV</a>
-        <a class="link" href="https://github.com/musishere" style="color: var(--text)">GitHub ↗</a>
-        <a class="link" href="https://www.linkedin.com/in/musishere" style="color: var(--text)">LinkedIn ↗</a>
+      <div class="skills">
+        {skills.map((g) => (
+          <div class="skill">
+            <div>
+              <h3>{g.title}</h3>
+              <p>{g.blurb}</p>
+            </div>
+            <ul class="chips">{g.chips.map((c) => <li>{c}</li>)}</ul>
+            <p class="shown">Shown in {g.shown.map((s, i) => (
+              <>{i > 0 && ' · '}{titleOf(s) ? <a href={`/projects/${s}/`}>{titleOf(s)}</a> : s}</>
+            ))}</p>
+          </div>
+        ))}
       </div>
     </div>
   </section>
+
+  <Workbench />
 </Base>
