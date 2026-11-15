@@ -1,0 +1,104 @@
+---
+import { fetchContributions } from '../lib/github';
+
+const user = 'musishere';
+const activity = await fetchContributions(user);
+// Weeks start on Sunday: the first cell has to land on its own weekday's row.
+const offset = activity ? new Date(`${activity.days[0].date}T00:00:00Z`).getUTCDay() + 1 : 1;
+const activeDays = activity?.days.filter((d) => d.level > 0).length ?? 0;
+
+// From musishere/README.md.
+const board = [
+  ['Shipped', 'Warden as an MCP gateway'],
+  ['Now', 'Taking Warden live on Azure'],
+  ['Next', 'Gateway canary releases, SLOs and vLLM routing'],
+];
+
+// From career-ops/cv.md.
+const facts = [
+  ['name', 'Mustafa Ahmed'],
+  ['role', 'Applied AI Engineer'],
+  ['langs', 'Python, TypeScript, Go, C#'],
+  ['based', 'Lahore, Pakistan · UTC+5'],
+  ['open', 'remote, or relocation'],
+  ['speaks', 'English, Urdu'],
+];
+---
+<section class="section" id="bench">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>On the bench</h2>
+      <p>Real activity, and what I'm working on</p>
+    </div>
+
+    <div class="bench">
+      {activity && (
+        <a class="tile-card heat" href={`https://github.com/${user}`}>
+          <div class="heat-top">
+            <span><b>{activity.total ?? activeDays}</b> {activity.total ? 'contributions' : 'active days'} in the last year</span>
+            <span class="mono">github.com/{user} ↗</span>
+          </div>
+          <div class="grid" role="img" aria-label={`GitHub activity: ${activeDays} active days in the last year`}>
+            {activity.days.map((d, i) => <i data-l={d.level} style={i === 0 ? `grid-row-start: ${offset}` : undefined}></i>)}
+          </div>
+        </a>
+      )}
+
+      <figure class="tile-card photo">
+        <img src="/me.jpg" width="320" height="320" loading="lazy" alt="Mustafa Ahmed">
+        <figcaption><span class="dot"></span>Open to remote or relocation</figcaption>
+      </figure>
+
+      <div class="tile-card board">
+        {board.map(([stage, text]) => (
+          <div class="col">
+            <span class="label">{stage}</span>
+            <p>{text}</p>
+          </div>
+        ))}
+      </div>
+
+      <div class="tile-card term">
+        <p class="prompt"><span>$</span> whoami</p>
+        <dl>{facts.map(([k, v]) => <><dt>{k}</dt><dd>{v}</dd></>)}</dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .bench { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+  .tile-card { border-radius: 16px; box-shadow: var(--lift); }
+  .heat { grid-column: span 8; padding: 24px; display: flex; flex-direction: column; justify-content: center; gap: 18px; color: #D6EEDC; background: #12211A; text-decoration: none; }
+  .heat-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; font-size: 15px; }
+  .heat-top b { font-size: 34px; font-weight: 600; letter-spacing: -0.03em; color: #8DEBB0; }
+  .heat-top .mono { font-size: 12.5px; color: #8FB39A; }
+  .grid { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; }
+  .grid i { aspect-ratio: 1; border-radius: 2px; background: #1E3429; }
+  .grid i[data-l="1"] { background: #2C6B48; }
+  .grid i[data-l="2"] { background: #3A9A63; }
+  .grid i[data-l="3"] { background: #58C985; }
+  .grid i[data-l="4"] { background: #A2F2BE; }
+
+  .photo { grid-column: span 4; padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 12px; background: #FBF8F1; color: #24211A; border: 1px solid #E2DACA; transform: rotate(1.2deg); }
+  .photo img { width: 100%; height: 100%; min-height: 0; flex: 1; object-fit: cover; border-radius: 6px; max-height: 300px; }
+  .photo figcaption { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+
+  .board { grid-column: span 7; padding: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; background: #DFD6C3; }
+  .col { padding: 16px; display: flex; flex-direction: column; gap: 8px; background: #FBF8F1; color: #24211A; border-radius: 10px; }
+  .col .label { color: #5A5344; }
+  .col p { font-size: 15px; line-height: 1.45; }
+
+  .term { grid-column: span 5; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; color: #D5D9CC; background: #14160F; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; }
+  .prompt span { color: #8DEBB0; }
+  dl { margin: 0; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 2px 12px; }
+  dt { color: #8C917E; }
+  dd { margin: 0; }
+
+  @media (max-width: 860px) {
+    .heat, .photo, .board, .term { grid-column: 1 / -1; }
+    .photo { transform: none; }
+    .board { grid-template-columns: minmax(0, 1fr); }
+    .heat { padding: 18px; }
+  }
+</style>

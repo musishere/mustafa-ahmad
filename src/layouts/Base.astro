@@ -9,6 +9,7 @@ const { title, description } = Astro.props;
 const built = new Date().toLocaleDateString('en-CA');
 const image = new URL('/me.jpg', Astro.site);
 const cv = '/resume.pdf';
+const email = 'mustafabukhari333@gmail.com';
 ---
 <!doctype html>
 <html lang="en">
@@ -25,6 +26,7 @@ const cv = '/resume.pdf';
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&text=Mustafa%20Ahmed&display=swap" rel="stylesheet">
 </head>
 <body>
   <header class="site-header">
@@ -32,9 +34,9 @@ const cv = '/resume.pdf';
       <a class="brand" href="/"><b>Mustafa Ahmed</b><span>Applied AI Engineer</span></a>
       <nav class="site-nav" aria-label="Sections">
         <a href="/#work">Work</a>
-        <a href="/#skills">Skills</a>
         <a href="/#demo">Demo</a>
         <a href="/#experience">Experience</a>
+        <a href="/#skills">Skills</a>
         <a class="btn btn-primary" href={cv}>
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
           Download CV
@@ -45,8 +47,24 @@ const cv = '/resume.pdf';
   <main>
     <slot />
   </main>
-  <footer class="site-footer">
-    <div class="wrap">
+  <footer class="site-footer" id="contact">
+    <div class="wrap foot">
+      <div class="foot-main">
+        <h2>Hiring an Applied AI or backend engineer?</h2>
+        <p>Remote, or open to relocation. Based in Lahore, GMT+5.</p>
+        <a class="email" href={`mailto:${email}`}>{email}</a>
+        <div class="foot-links">
+          <a href="https://www.linkedin.com/in/musishere">LinkedIn ↗</a>
+          <a href="https://github.com/musishere">GitHub ↗</a>
+          <a href={cv}>Download CV ↓</a>
+        </div>
+      </div>
+      <div class="foot-sign">
+        <p class="sign">Mustafa Ahmed</p>
+        <p class="label">Applied AI Engineer</p>
+      </div>
+    </div>
+    <div class="wrap foot-base">
       <span>© {new Date().getFullYear()} Mustafa Ahmed · Last updated {built}</span>
       <a href="https://github.com/musishere/mustafa-ahmad">Source ↗</a>
     </div>
