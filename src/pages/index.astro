@@ -14,7 +14,7 @@ const others = projects.filter((p) => !p.data.featured);
 const index = (id: string) => projects.findIndex((p) => p.id === id);
 
 const stats = [
-  ['3.5+ yrs', 'Backend engineering, from payments and auth to AI agents', 'since Mar 2023'],
+  ['3.5+ yrs', 'Shipping LLM features in production backends, from RAG search to AI SaaS', 'since Mar 2023'],
   ['7 checks', 'Fail-closed, on every tool call an agent makes', 'Warden'],
   ['74 tests', 'Named as security promises, each proven by breaking its check', 'Warden'],
   ['30/30', 'Scored on real ZUGFeRD e-invoices, the German/EU standard', 'Tickmark'],
@@ -23,7 +23,7 @@ const stats = [
 // `shown` entries are project ids (linked) or plain names (no page).
 const skills = [
   { title: 'AI & LLM systems', blurb: 'Agents whose tool access, approvals and evals are enforced in code.',
-    chips: ['Claude API', 'MCP', 'LangGraph', 'LangChain', 'RAG', 'pgvector', 'Structured outputs', 'Agent evals', 'Guardrails', 'Prompt-injection testing', 'Human-in-the-loop'],
+    chips: ['Claude API', 'OpenAI API', 'MCP', 'LangGraph', 'LangChain', 'RAG', 'pgvector', 'Structured outputs', 'Agent evals', 'Guardrails', 'Prompt-injection testing', 'Human-in-the-loop'],
     shown: ['warden', 'tickmark', 'Standwise'] },
   { title: 'Backend', blurb: 'APIs and services in four languages.',
     chips: ['Python · FastAPI', 'TypeScript · NestJS', 'C# · ASP.NET Core', 'Go · Gin', 'Node.js', 'REST', 'Microservices', 'Socket.IO'],
@@ -50,7 +50,7 @@ const marks = [
   ['none', 'no evidence', 'No invoice found for this row'],
 ];
 
-// Wording stays within career-ops/cv.md.
+// Wording stays within Mustafa_Ahmed_Resume.pdf (Nov 2026).
 const experience = [
   { note: 'Current', org: 'ByteForge', role: 'AI Engineer (Solutions)', dates: 'Dec 2025 – Present',
     lead: 'Architected and built Standwise, a multi-tenant, chat-first SaaS work platform for HR and project management, now in a pre-launch pilot with ByteForge as its first tenant.',
@@ -69,21 +69,24 @@ const experience = [
       'ELO ratings from match results for matchmaking, badges and streaks for retention, and the React Native mobile app',
     ],
     stack: ['Go', 'React Native', 'PostgreSQL'] },
-  { note: 'Past role', org: 'Infoetech', role: 'Software Engineer', dates: 'Nov 2023 – Dec 2025',
-    lead: 'REST APIs and microservices powering search, availability and checkout for a tour-booking platform.',
+  { note: 'Past role', org: 'Infoetech', role: 'Software Engineer (AI & Backend)', dates: 'Nov 2023 – Dec 2025',
+    lead: 'LLM-powered search, a RAG support assistant and real-time availability for a tour-booking platform.',
     bullets: [
-      'Real-time availability updates with Socket.IO, so customers see current slots without refreshing',
-      'Reduced latency on the search and checkout endpoints through database index tuning and Redis caching',
-      'Zero-downtime deployments on AWS using Docker and Kubernetes',
+      'LLM search layer: listings and reviews embedded into pgvector with a retrieval and rerank pipeline behind a natural-language query endpoint; lifted search-to-booking conversion by ~18% over keyword search in an A/B test',
+      'RAG support assistant that answers from the booking-policy corpus with citations and refuses below a retrieval-confidence threshold; cut human support tickets on covered topics by ~30%',
+      'Real-time availability agent on Socket.IO that pushes ranked alternatives to waiting customers when slots open; reduced “no slots available” drop-off by ~22%',
+      'Evaluation harness in CI (golden query set, retrieval hit-rate, answer-faithfulness checks), so prompt or model changes ship only when they beat the baseline',
+      'Reduced search and checkout latency with index tuning and Redis caching; zero-downtime deployments on AWS with Docker and Kubernetes',
     ],
-    stack: ['Node.js', 'Express', 'Socket.IO', 'Redis', 'AWS', 'Kubernetes'] },
-  { note: 'Past role', org: 'Ethisol', role: 'Software Engineer', dates: 'Mar 2023 – Nov 2023',
-    lead: 'Backend services in Node.js and MongoDB for enterprise client applications.',
+    stack: ['Node.js', 'Python', 'pgvector', 'OpenAI API', 'Socket.IO', 'Redis', 'AWS', 'Kubernetes'] },
+  { note: 'Past role', org: 'Ethisol', role: 'Software Engineer (AI & Backend)', dates: 'Mar 2023 – Nov 2023',
+    lead: 'LLM classification and document extraction, plus payments and auth, for enterprise client applications.',
     bullets: [
-      'Integrated Stripe and PayPal payments into client applications',
-      'JWT authentication and role-based access control to secure those applications',
+      'LLM classification service that triages inbound support and onboarding requests with confidence scores, routing low-confidence items to humans; cut manual triage effort by ~40%',
+      'Document-extraction pipeline on the OpenAI API with structured-output schemas and validation, and a confidence gate that queues uncertain extractions for human review',
+      'Stripe and PayPal payments with idempotent webhook handling and reconciliation; JWT authentication and RBAC across client apps and their AI endpoints',
     ],
-    stack: ['Node.js', 'MongoDB', 'Stripe', 'PayPal'] },
+    stack: ['Node.js', 'MongoDB', 'OpenAI API', 'Stripe', 'PayPal'] },
   { note: 'Education', org: 'University of Lahore', role: 'BSc Computer Science', dates: '2026',
     lead: 'Computer Science degree, class of 2026.', bullets: [], stack: [] },
 ];
@@ -92,14 +95,14 @@ const titleOf = (id: string) => projects.find((p) => p.id === id)?.data.title;
 ---
 <Base
   title="Mustafa Ahmed · Applied AI Engineer"
-  description="Applied AI Engineer with 3.5+ years of backend engineering, building secure AI agents for regulated work: tool permissions in code, human review gates, evals and audit trails."
+  description="Applied AI Engineer with 3.5+ years shipping LLM features in production backends, building secure AI agents for regulated work: tool permissions in code, human review gates, evals and audit trails."
 >
   <section class="hero wrap" id="top">
     <div class="hero-head">
       <img class="avatar hero-avatar" src="/me.jpg" width="112" height="112" alt="Mustafa Ahmed">
       <p class="tag">Applied AI Engineer · Author of Warden</p>
       <h1>I build <span class="key k1">secure</span> <span class="key k2">audited</span> AI agents for <span class="key k3">regulated</span> work.</h1>
-      <p class="lede">3.5+ years of backend engineering. I build the parts around the model: tool permissions enforced in code, human review gates, evals and audit trails.</p>
+      <p class="lede">3.5+ years shipping LLM features in production backends. I build the parts around the model: tool permissions enforced in code, human review gates, evals and audit trails.</p>
       <div class="cta">
         <a class="btn btn-primary" href="/resume.pdf">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
