@@ -5,13 +5,13 @@ import Video from '../components/Video.astro';
 import WardenPanel from '../components/WardenPanel.astro';
 import Envelope from '../components/Envelope.astro';
 import Workbench from '../components/Workbench.astro';
+import Connect from '../components/Connect.astro';
 import { getProjects, num, statusLabel } from '../lib/projects';
 
 const projects = await getProjects();
 const featured = projects.filter((p) => p.data.featured);
 const others = projects.filter((p) => !p.data.featured);
 const index = (id: string) => projects.findIndex((p) => p.id === id);
-const email = 'mustafabukhari333@gmail.com';
 
 const stats = [
   ['3.5+ yrs', 'Backend engineering, from payments and auth to AI agents', 'since Mar 2023'],
@@ -92,22 +92,22 @@ const titleOf = (id: string) => projects.find((p) => p.id === id)?.data.title;
 ---
 <Base
   title="Mustafa Ahmed · Applied AI Engineer"
-  description="Applied AI Engineer with 3.5+ years of backend engineering, building governed AI agents for regulated work: tool permissions in code, human review gates, evals and audit trails."
+  description="Applied AI Engineer with 3.5+ years of backend engineering, building secure AI agents for regulated work: tool permissions in code, human review gates, evals and audit trails."
 >
   <section class="hero wrap" id="top">
     <div class="hero-head">
       <img class="avatar hero-avatar" src="/me.jpg" width="112" height="112" alt="Mustafa Ahmed">
       <p class="tag">Applied AI Engineer · Author of Warden</p>
-      <h1>I build <span class="key k1">governed</span> <span class="key k2">audited</span> AI agents for <span class="key k3">regulated</span> work.</h1>
+      <h1>I build <span class="key k1">secure</span> <span class="key k2">audited</span> AI agents for <span class="key k3">regulated</span> work.</h1>
       <p class="lede">3.5+ years of backend engineering. I build the parts around the model: tool permissions enforced in code, human review gates, evals and audit trails.</p>
       <div class="cta">
         <a class="btn btn-primary" href="/resume.pdf">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
           Download CV
         </a>
-        <a class="btn" href={`mailto:${email}`}>Email me</a>
         <a class="link" href="#demo">Try the live agent ↓</a>
       </div>
+      <Connect />
     </div>
 
     <WardenPanel />
@@ -181,6 +181,7 @@ const titleOf = (id: string) => projects.find((p) => p.id === id)?.data.title;
               </div>
             )}
             <ul class="chips">{p.data.stack.slice(0, 5).map((s) => <li>{s}</li>)}</ul>
+            <span class="go" aria-hidden="true">View case study <span>→</span></span>
           </article>
         ))}
       </div>

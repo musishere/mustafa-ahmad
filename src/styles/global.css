@@ -1,9 +1,9 @@
 :root {
-  --bg: #F6F2E9;
-  --surface: #FCFAF4;
-  --code: #EFE9DC;
-  --border: #E2DACA;
-  --border-strong: #CFC5B1;
+  --bg: #FFFFFF;
+  --surface: #FAFAF9;
+  --code: #F2F2F0;
+  --border: #E7E5E1;
+  --border-strong: #D1CEC7;
   --text: #17150F;
   --body: #4A4538;
   --muted: #6A6353;
@@ -16,7 +16,7 @@
   --warn-soft: #FAEFD6;
   --danger: #B23412;
   --danger-soft: #FBE7E0;
-  --header: rgba(252, 250, 244, 0.86);
+  --header: rgba(255, 255, 255, 0.86);
   --dot: #DED6C5;
   --lift: 0 1px 0 rgba(40, 30, 10, 0.05), 0 14px 28px -20px rgba(40, 30, 10, 0.35);
   --sans: 'Geist', system-ui, sans-serif;
@@ -59,7 +59,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: 80px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 body {
   margin: 0;
-  background: radial-gradient(var(--dot) 1px, transparent 1.4px) 0 0 / 22px 22px, var(--bg);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
   font-size: 17px;
@@ -357,3 +357,19 @@ code, pre, .mono { font-family: var(--mono); }
 }
 
 @media (prefers-reduced-motion: reduce) { .key, .project, .project .arrow { transition: none; } .project:hover { transform: none; } }
+
+/* Let's connect */
+.connect { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; max-width: 440px; margin: 16px auto 0; }
+.connect input[type=email] { flex: 1 1 200px; min-height: 46px; padding: 0 16px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface); color: var(--text); font: 400 15px/1.2 var(--sans); }
+.connect input[type=email]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.connect .btn { min-height: 46px; padding: 0 20px; border-radius: 12px; }
+.connect.sent input, .connect.sent .btn { display: none; }
+.connect-done { margin: 0; padding: 12px 16px; border-radius: 12px; background: var(--ok-soft); color: var(--ok); font-weight: 500; }
+.foot-main .connect { justify-content: flex-start; margin: 20px 0 12px; }
+
+/* Always-visible click cue on project cards */
+.project .go { display: flex; align-items: center; gap: 6px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--accent); font-size: 14px; font-weight: 500; }
+.project .go span { transition: transform 0.2s; }
+.project:hover .go span, .project:focus-within .go span { transform: translateX(4px); }
+.project:hover, .project:focus-within { background: var(--bg); }
+@media (prefers-reduced-motion: reduce) { .project .go span { transition: none; } }

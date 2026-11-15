@@ -1,0 +1,34 @@
+---
+// ponytail: FormSubmit relays the email with no backend; swap for a Vercel function + Resend if it ever rate-limits.
+const endpoint = 'https://formsubmit.co/ajax/mustafabukhari333@gmail.com';
+---
+<form class="connect" action={endpoint} method="post">
+  <input type="email" name="email" required autocomplete="email" placeholder="Your work email" aria-label="Your email">
+  <input type="text" name="_honey" tabindex="-1" autocomplete="off" hidden>
+  <button class="btn btn-primary" type="submit">Let's connect</button>
+  <p class="connect-done" role="status" hidden>Thanks. I'll be in touch within a day.</p>
+</form>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('form.connect').forEach((form) => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const button = form.querySelector('button')!;
+      const done = form.querySelector<HTMLElement>('.connect-done')!;
+      const data = new FormData(form);
+      data.append('_subject', `New connect request: ${data.get('email')}`);
+      data.append('page', location.href);
+      button.disabled = true;
+      button.textContent = 'Sending…';
+      try {
+        const res = await fetch(form.action, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error(String(res.status));
+        form.classList.add('sent');
+        done.hidden = false;
+      } catch {
+        button.disabled = false;
+        button.textContent = 'Try again';
+      }
+    });
+  });
+</script>
